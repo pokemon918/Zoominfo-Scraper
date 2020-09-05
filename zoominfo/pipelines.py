@@ -23,13 +23,12 @@ class ZoominfoPipeline:
     def _exporter_for_item(self, item):
         adapter = ItemAdapter(item)
         company = adapter['company']
-        if company not in self.company_name:
-            if not os.path.exists('output'):
-                os.makedirs('output')
-            f = open(f'output/{company}.csv', 'wb')
-            exporter = CsvItemExporter(f)
-            exporter.start_exporting()
-            self.company_name[company] = exporter
+        if not os.path.exists('output'):
+            os.makedirs('output')
+        f = open(f'output/{company}.csv', 'wb')
+        exporter = CsvItemExporter(f, fields_to_export=['headquarters', 'phone', 'revenue', 'employees_num', 'website'])
+        exporter.start_exporting()
+        self.company_name[company] = exporter
         return self.company_name[company]
 
     def process_item(self, item, spider):
