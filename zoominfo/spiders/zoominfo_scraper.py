@@ -1,21 +1,8 @@
 import scrapy
-import requests
-import random
 
 
 class ZoominfoSpider(scrapy.Spider):
     name = 'zoominfo'
-
-    def __init__(self, *args, **kwargs):
-        super(ZoominfoSpider, self).__init__(*args, **kwargs)
-        r = requests.get('https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt')
-        self.proxy_pool = r.text.split('\n')
-        print(self.proxy_pool)
-
-    def set_proxy(self, request):
-        if self.proxy_pool:
-            request.meta['proxy'] = random.choice(self.proxy_pool)
-        return request
 
     def start_requests(self):
         with open("input.csv", 'r') as input_file:
@@ -23,13 +10,13 @@ class ZoominfoSpider(scrapy.Spider):
                 company = company_name.strip()
                 url = f"https://www.google.com.ua/search?q={company + '+zoominfo+overview'}"
                 req = scrapy.Request(url=url, callback=self.parse_google_results, cb_kwargs={"company": company})
-                yield self.set_proxy(req)
+                req.meta['proxy'] = None
+                yield req
 
     def parse_google_results(self, response, **kwargs):
         all_links = response.css("a::attr(href)").getall()
         zoomlinks = [link for link in all_links if "www.zoominfo.com/c/" in link]
-        req = scrapy.Request(url=zoomlinks[0], callback=self.parse, cb_kwargs=kwargs)
-        yield self.set_proxy(req)
+        yield scrapy.Request(url=zoomlinks[0], callback=self.parse, cb_kwargs=kwargs)
 
     def parse(self, response, **kwargs):
         yield {
