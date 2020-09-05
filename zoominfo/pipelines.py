@@ -14,25 +14,15 @@ class ZoominfoPipeline:
     """Stores items in multiple CSV files according to the names of companies"""
 
     def open_spider(self, spider):
-        self.company_name = {}
-
-    def close_spider(self, spider):
-        for exporter in self.company_name.values():
-            exporter.finish_exporting()
-
-    def _exporter_for_item(self, item):
-        adapter = ItemAdapter(item)
-        company = adapter['company']
         if not os.path.exists('output'):
             os.makedirs('output')
-        f = open(f'output/{company}.csv', 'wb')
-        exporter = CsvItemExporter(f, fields_to_export=['headquarters', 'phone', 'revenue', 'employees_num', 'website'])
-        exporter.start_exporting()
-        self.company_name[company] = exporter
-        return self.company_name[company]
 
     def process_item(self, item, spider):
-        exporter = self._exporter_for_item(item)
+        adapter = ItemAdapter(item)
+        f = open(f'output/{adapter["company"]}.csv', 'wb')
+        exporter = CsvItemExporter(f, fields_to_export=['headquarters', 'phone', 'revenue', 'employees_num', 'website'])
+        exporter.start_exporting()
         exporter.export_item(item)
+        exporter.finish_exporting()
         return item
 
